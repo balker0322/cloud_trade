@@ -1,4 +1,4 @@
-from flask import Flask, render_template, session, copy_current_request_context
+from flask import Flask, render_template, session, copy_current_request_context, request, make_response
 from flask_socketio import SocketIO, emit, disconnect
 from threading import Lock
 
@@ -7,7 +7,7 @@ import time
 
 from binance.client import Client
 from binance.websockets import BinanceSocketManager
-from app.config import BINANCE_CREDENTIALS
+from app.config import BINANCE_CREDENTIALS, USER_LOGIN
 
 
 client = Client(BINANCE_CREDENTIALS['KEY'], BINANCE_CREDENTIALS['SECRET'])
@@ -37,7 +37,10 @@ def emit_data(msg):
 
 @app.route('/')
 def index():
-	return render_template('index.html', async_mode=socket_.async_mode)
+	print(USER_LOGIN['USERNAME'])
+	if request.authorization and request.authorization.username == str(USER_LOGIN['USERNAME']) and request.authorization.password == str(USER_LOGIN['PASSWORD']):
+		return render_template('index.html', async_mode=socket_.async_mode)
+	return make_response('Could not verify!###', 401, {'WWW-Authenticate' : 'Basic realm="Login Required"'})
 
 
 @socket_.on('connect', namespace='/test')
